@@ -536,7 +536,7 @@ def group_list():
         # dirty and ugly, but pyton-ish
         bmcnet = group.show_bmc_if(brief = True)
         interfaces = "BMC:" + str(bmcnet if bmcnet else None)
-        for k in group.show()['interfaces'].keys():
+        for k in sorted(group.ifs):
             brief_if = group.show_if(k, brief = True)
             if bool(brief_if):
                 interfaces += ", %s:%s" % (k, brief_if)
@@ -578,7 +578,7 @@ def group_show(out_format = '%20s%60s\n', **args):
     bmcnet = group.show_bmc_if(brief = True)
 
     interfaces = "BMC:" + str(bmcnet if bmcnet else None) + ", "
-    interfaces += ", ".join(["%s:%s" % (k, group.show_if(k, brief = True) if group.show_if(k) else None) for k in group.show()['interfaces'].keys()])
+    interfaces += ", ".join(["%s:%s" % (k, group.show_if(k, brief = True) if group.show_if(k) else None) for k in sorted(group.ifs)])
     out_json['interfaces'] = interfaces
     header = ['Parameter', 'Value']
     content = []
@@ -590,7 +590,7 @@ def group_show(out_format = '%20s%60s\n', **args):
 def group_add(**args):
     check_active_node()
     args['create'] = True
-    args['interfaces'] = args['interface']
+    args['interface_names'] = args['interface']
     args.pop('interface')
 #    try:
 #        interface_list  = args.pop('interface')

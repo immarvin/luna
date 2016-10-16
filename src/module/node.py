@@ -1085,8 +1085,8 @@ EOF"""
 
     def boot_params(self):
         params = {}
-        params['boot_if'] = None
-        params['net_prefix'] = None
+        params['boot_if'] = ""
+        params['net_prefix'] = ""
         osimage = OsImage(id = self.get('osimage').id, mongo_db = self._mongo_db)
         try:
             params['kernel_file'] = osimage.get('kernfile')
@@ -1107,19 +1107,18 @@ EOF"""
             params['net_prefix'] = ""
             return params
         interfaces = self._get_json()['interfaces']
-        try:
-            if_params = interfaces[params['boot_if']]
-        except:
-            self._logger.error("Boot interface '{}' does not present in configured interface list '{}'.".format(params['boot_if'], interfaces.keys()))
-            params['boot_if'] = ""
-            params['net_prefix'] = ""
+        if not bool(params['boot_if']):
+            self._logger.warning("Boot interface (--boot_if) is not configured.")
             return params
-        net = None
+        if not params['boot_if'] in self.ifs:
+            self._logger.warning("Boot interface '{}' does not present in interface list '{}'.".format(params['boot_if'], self.ifs))
+            return params
+        if_uuid = self.get_if_uuid(params['boot_if'])
         try:
-            if_net = if_params['network']
+            if_net = self.json['interfaces'][if_uuid]['network']
             net = Network(id = if_net.id, mongo_db = self._mongo_db)
         except:
-            pass
+            net = None
         if not bool(net):
             self._logger.error("Boot interface '{}' has no network configured".format(params['boot_if']))
             params['boot_if'] = ""
@@ -1144,34 +1143,37 @@ EOF"""
             params['torrent_if'] = ''
         json = self._get_json()
         if bool(params['torrent_if']):
+            if_uuid = self.get_if_uuid(params['torrent_if'])
             try:
-                net_dbref = json['interfaces'][params['torrent_if']]['network']
-                net = Network(id = net_dbref.id, mongo_db = self._mongo_db)
+                if_net = self.json['interfaces'][if_uuid]['network']
+                net = Network(id = if_net.id, mongo_db = self._mongo_db)
                 params['torrent_if_net_prefix'] = str(net.get('PREFIX'))
             except:
                 params['torrent_if'] = ''
-        try:
-            net_dbref = json['interfaces'][self.get('boot_if')]['network']
-            net = Network(id = net_dbref.id, mongo_db = self._mongo_db)
-            params['domain'] = str(net.name)
-        except:
-            params['domain'] = ""
+        if bool(params['boot_if']):
+            if_uuid = self.get_if_uuid(params['boot_if'])
+            try:
+                if_net = self.json['interfaces'][if_uuid]['network']
+                net = Network(id = if_net.id, mongo_db = self._mongo_db)
+                params['domain'] = str(net.name)
+            except:
+                params['domain'] = ""
         params['interfaces'] = {}
         try:
-            interfaces = json['interfaces'].keys()
+            interfaces = self.ifs
             for interface in interfaces:
                 params['interfaces'][str(interface)] = str(self.get_if_parms(interface))
         except:
             pass
         try:
-            interfaces = json['interfaces'].keys()
+            interfaces = self.ifs
         except:
             interfaces = []
-
         for interface in interfaces:
-            net_dbref = json['interfaces'][interface]['network']
+            if_uuid = self.get_if_uuid(interface)
             try:
-                net = Network(id = net_dbref.id, mongo_db = self._mongo_db)
+                if_net = self.json['interfaces'][if_uuid]['network']
+                net = Network(id = if_net.id, mongo_db = self._mongo_db)
                 net_prefix = "\n" + "PREFIX=" + str(net.get('PREFIX'))
             except:
                 net_prefix = ""

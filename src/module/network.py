@@ -59,10 +59,10 @@ class Network(Base):
             self._id = self._mongo_collection.insert(mongo_doc)
             self._DBRef = DBRef(self._collection_name, self._id)
             self.link(cluster)
-            if not ns_ip:
+            if not type(ns_ip) == self._keylist['ns_ip']:
+                old_ns_ip = ns_ip
                 ns_ip = self.relnum_to_ip(freelist[0]['end'])
-            if not ns_ip:
-                self._logger.error("Cannot configure IP address for NS")
+                self._logger.error("'{}' is improper 'ns_ip'. Using '{}'". format(old_ns_ip, ns_ip))
             else:
                 self.set('ns_ip', ns_ip)
         else:
@@ -149,11 +149,14 @@ class Network(Base):
         if not key in self._keylist:
             self._logger.error("Cannot change '{}' field".format(key))
             return None
+        if type(value) is not self._keylist[key]:
+            self._logger.error("Value '{}' should be '{}' type".format(key, self._keylist[key]))
+            return None
         obj_json = self._get_json()
         if key == 'ns_ip':
             ns_ip = self.ip_to_relnum(value)
             if not ns_ip:
-                self._logger.error("Cannot configure IP address for NS")
+                self._logger.error("Cannot configure IP address for NS.")
                 return None
             old_ip = None
             try:
@@ -207,7 +210,6 @@ class Network(Base):
             try:
                 ns_ip = self.relnum_to_ip(obj_json['ns_ip'])
             except:
-                self._logger.error("IP address of the name server (ns_ip) for zone is improperly configured.")
                 ns_ip = obj_json['ns_ip']
             return ns_ip
         return super(Network, self).get(key)

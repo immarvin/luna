@@ -204,7 +204,12 @@ class Network(Base):
         if key == 'PREFIX':
             return obj_json['PREFIX']
         if key == 'ns_ip':
-            return self.relnum_to_ip(obj_json['ns_ip'])
+            try:
+                ns_ip = self.relnum_to_ip(obj_json['ns_ip'])
+            except:
+                self._logger.error("IP address of the name server (ns_ip) for zone is improperly configured.")
+                ns_ip = obj_json['ns_ip']
+            return ns_ip
         return super(Network, self).get(key)
 
     def _get_next_ip(self):

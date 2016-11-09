@@ -166,7 +166,7 @@ def cluster_makedns():
 def cluster_makedhcp(**args):
     check_active_node()
     cluster = luna.Cluster()
-    res = cluster.makedhcp(args['network'], args['start_ip'], args['end_ip'], args['no_ha'])
+    res = cluster.makedhcp(args['network'], args['start_ip'], args['end_ip'], args['dhcpd_native_ha'])
     if not res:
         return False
     _run_command(['/usr/bin/systemctl', 'stop', "dhcpd"],
@@ -220,7 +220,7 @@ def cluster_makedhcp(**args):
         "Starting local dhcpd.",
         "Unable to start dhcpd. Exit code is non-zero.")
     time.sleep(3)
-    if not cluster.is_ha() or args['no_ha']:
+    if not cluster.is_ha() or not args['dhcpd_native_ha']:
         return True
     for ip in ips:
         _run_command(['/usr/bin/ssh',
@@ -953,7 +953,7 @@ cluster_command = cluster_parser_actions.add_parser('sync',help='Synchronize clu
 cluster_command = cluster_parser_actions.add_parser('makedns',help='Create config and zone files for named.')
 # makedhcp
 cluster_command = cluster_parser_actions.add_parser('makedhcp',help='Create config and zone files for named.')
-cluster_command.add_argument('--no_ha', action='store_true', help='Create high availa')
+cluster_command.add_argument('--dhcpd_native_ha', action='store_false', help='Create high available dhcpd configureation.')
 cluster_command.add_argument('--network', '-N', required=True, type=str, help='Name of network definition.')
 cluster_command.add_argument('--start_ip', '-s', required=True, type=str, help='First ip in dynamic range.')
 cluster_command.add_argument('--end_ip', '-e', required=True, type=str, help='Last ip in dynamic range.')

@@ -349,7 +349,7 @@ class Cluster(Base):
         import pwd
         import grp
         import os
-        
+
         # get network _id configured for cluster
         obj_json = self._get_json()
         try:
@@ -429,7 +429,7 @@ class Cluster(Base):
                 self._logger.info("Removed old '{}'".format(filepath))
             except:
                 self._logger.info("Unable to remove '{}'".format(filepath))
-        # create zone files 
+        # create zone files
         for network in networks:
             # create zone
             z = {}
@@ -452,7 +452,7 @@ class Cluster(Base):
                 reverseiplist = list(reversed(iparr[networks[network]['mutable_octet']:]))
                 reverseip = '.'.join([str(elem) for elem in reverseiplist])
                 z['hosts'][hostname] = reverseip
-            zonefile = open(revzonepath, 'w') 
+            zonefile = open(revzonepath, 'w')
             zonefile.write(tloader.load('templ_zone_arpa.cfg').generate(z = z))
             zonefile.close()
             os.chown(revzonepath, nameduid, namedgid)
